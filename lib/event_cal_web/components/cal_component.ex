@@ -4,7 +4,7 @@ defmodule EventCalWeb.CalComponent do
   def cal(assigns) do
     ~H"""
     <section class="even:hidden even:md:block text-center md:block">
-      <h2 class="text-sm font-semibold text-zinc-900">{@month} {@year}</h2>
+      <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{@month} {@year}</h2>
       <div class="mt-8 grid grid-cols-7 text-xs/6 text-zinc-500">
         <div>Sun</div>
         <div>Mon</div>
@@ -14,14 +14,14 @@ defmodule EventCalWeb.CalComponent do
         <div>Fri</div>
         <div>Sat</div>
       </div>
-      <div class="isolate mt-4 grid grid-cols-7 gap-px bg-zinc-200 text-xs shadow ring-1 ring-zinc-200 shadow-xl">
+      <div class="isolate mt-4 grid grid-cols-7 gap-px bg-zinc-200 dark:bg-zinc-800 text-xs shadow ring-1 ring-zinc-200 dark:ring-zinc-800 shadow-xl">
         <button
           :for={{scope, date} <- @cal}
           type="button"
           class={
             (scope == :outside &&
-               "relative bg-zinc-100 py-1.5 text-zinc-300 hover:bg-zinc-100 focus:z-10") ||
-              "relative bg-white py-1.5 text-zinc-900 hover:bg-zinc-100 focus:z-10"
+               "relative bg-zinc-100 dark:bg-zinc-900/10 py-1.5 text-zinc-300 dark:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:z-10") ||
+              "relative bg-white dark:bg-zinc-900 py-1.5 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:z-10"
           }
         >
           <span class="mx-auto flex size-7 items-center justify-center rounded-full">

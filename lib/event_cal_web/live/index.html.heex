@@ -1,10 +1,12 @@
 <div id="index" phx-hook="TimezoneHook">
-  <div class="my-10 text-center text-sm">{@timezone} | {@now}</div>
+  <div class="my-10 text-center text-sm text-zinc-900 dark:text-zinc-100">
+    {@timezone} | {@now} <span class=""><.darkmode /></span>
+  </div>
   <div class="relative grid grid-cols-1 gap-x-14 md:grid-cols-2">
     <button
       type="button"
       phx-click="prev-month"
-      class="absolute -left-1.5 -top-1 flex items-center justify-center p-1.5 text-zinc-400 hover:text-zinc-500"
+      class="absolute -left-1.5 -top-1 flex items-center justify-center p-1.5 text-zinc-400 dark:text-zinc-600 hover:text-zinc-500"
     >
       <span class="sr-only">Previous month</span>
       <.icon name="hero-chevron-left" />
@@ -12,7 +14,7 @@
     <button
       type="button"
       phx-click="next-month"
-      class="absolute -right-1.5 -top-1 flex items-center justify-center p-1.5 text-zinc-400 hover:text-zinc-500"
+      class="absolute -right-1.5 -top-1 flex items-center justify-center p-1.5 text-zinc-400 dark:text-zinc-600 hover:text-zinc-500"
     >
       <span class="sr-only">Next month</span>
       <.icon name="hero-chevron-right" />
