@@ -10,7 +10,7 @@ defmodule EventCalWeb.Live.Index do
   def handle_params(%{"year" => year, "month" => month}, _uri, socket) do
     with {:ok, date} <- Timex.parse("#{year}-#{month}-01", "{YYYY}-{0M}-{0D}") do
       now = Timex.now(socket.assigns.timezone || "UTC")
-      {:noreply, assign_month_data(socket, now, date)}
+      {:noreply, assign_cal_data(socket, now, date)}
     else
       _error ->
         {:noreply, push_patch(socket, to: "/#{Timex.format!(Timex.now(), "{YYYY}/{0M}")}")}
@@ -27,7 +27,7 @@ defmodule EventCalWeb.Live.Index do
 
     {:noreply,
      socket
-     |> assign_month_data(
+     |> assign_cal_data(
        Timex.now(timezone),
        parse_month!(socket.assigns.current_month, socket.assigns.current_month_year)
      )
@@ -51,11 +51,11 @@ defmodule EventCalWeb.Live.Index do
   defp push_patch_to_month(%Socket{} = socket, date) do
     {:noreply,
      socket
-     |> assign_month_data(Timex.now(socket.assigns.timezone || "UTC"), date)
+     |> assign_cal_data(Timex.now(socket.assigns.timezone || "UTC"), date)
      |> push_patch(to: ~p"/#{Timex.format!(date, "{YYYY}")}/#{Timex.format!(date, "{0M}")}")}
   end
 
-  defp assign_month_data(socket, now, current_month) do
+  defp assign_cal_data(socket, now, current_month) do
     next_month = Timex.shift(current_month, months: 1)
 
     assign(socket,
@@ -77,18 +77,18 @@ defmodule EventCalWeb.Live.Index do
     first_date = Timex.beginning_of_month(date)
     last_date = Timex.end_of_month(date)
 
-    start_date = adjust_start_date(first_date)
-    end_date = adjust_end_date(last_date)
+    start_date = pad_start_date(first_date)
+    end_date = pad_end_date(last_date)
 
     Date.range(start_date, end_date)
     |> Enum.map(&classify_day(&1, first_date, last_date, now))
   end
 
-  defp adjust_start_date(first_date) do
+  defp pad_start_date(first_date) do
     first_date |> Date.add(-Timex.weekday(first_date) |> rem(7))
   end
 
-  defp adjust_end_date(last_date) do
+  defp pad_end_date(last_date) do
     last_date |> Date.add(6 - rem(Date.day_of_week(last_date), 7))
   end
 
