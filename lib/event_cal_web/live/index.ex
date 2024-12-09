@@ -8,7 +8,7 @@ defmodule EventCalWeb.Live.Index do
   end
 
   def handle_params(%{"year" => year, "month" => month}, _uri, socket) do
-    with {:ok, date} <- parse_date(year, month) do
+    with {:ok, date} <- Timex.parse("#{year}-#{month}-01", "{YYYY}-{0M}-{0D}") do
       now = Timex.now(socket.assigns.timezone || "UTC")
       {:noreply, assign_month_data(socket, now, date)}
     else
@@ -67,13 +67,6 @@ defmodule EventCalWeb.Live.Index do
       current_cal: generate_calendar_days(current_month, now),
       next_cal: generate_calendar_days(next_month, now)
     )
-  end
-
-  defp parse_date(year, month) do
-    case Timex.parse("#{year}-#{month}-01", "{YYYY}-{0M}-{0D}") do
-      {:ok, date} -> {:ok, date}
-      _error -> {:error, :invalid_date}
-    end
   end
 
   defp parse_month!(month, year) do
