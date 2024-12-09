@@ -1,14 +1,31 @@
 defmodule EventCalWeb.Live.Index do
   use EventCalWeb, :live_view
 
+  alias Phoenix.LiveView.Socket
+
   def mount(_params, _session, socket) do
-    now = Timex.now("UTC")
-    {:ok, assign_month_data(socket, now, nil, Timex.beginning_of_month(now))}
+    {:ok, assign(socket, timezone: nil)}
+  end
+
+  def handle_params(%{"year" => year, "month" => month}, _uri, socket) do
+    with {:ok, date} <- parse_date(year, month) do
+      now = Timex.now(socket.assigns.timezone || "UTC")
+      {:noreply, assign_month_data(socket, now, date)}
+    else
+      _error ->
+        {:noreply, push_patch(socket, to: "/#{Timex.format!(Timex.now(), "{YYYY}/{0M}")}")}
+    end
+  end
+
+  def handle_params(_params, _uri, socket) do
+    now = Timex.now(socket.assigns.timezone || "UTC")
+    push_patch_to_month(socket, now)
   end
 
   def handle_event("set_timezone", %{"timezone" => timezone}, socket) do
-    now = Timex.now(timezone)
-    {:noreply, assign_month_data(socket, now, timezone, Timex.beginning_of_month(now))}
+    now = Timex.format!(Timex.now(timezone), "{0M}/{0D}/{YY} {h12}:{m} {AM}")
+
+    {:noreply, assign(socket, timezone: timezone, now: now)}
   end
 
   def handle_event("prev-month", _params, socket) do
@@ -19,24 +36,23 @@ defmodule EventCalWeb.Live.Index do
     shift_month(socket, 1)
   end
 
-  def shift_month(socket, direction) do
-    current_month = parse_month(socket.assigns.current_month, socket.assigns.current_month_year)
+  defp shift_month(%Socket{} = socket, direction) do
+    current_month = parse_month!(socket.assigns.current_month, socket.assigns.current_month_year)
     updated_month = Timex.shift(current_month, months: direction)
-
-    {:noreply,
-     assign_month_data(
-       socket,
-       Timex.now(socket.assigns.timezone),
-       socket.assigns.timezone,
-       updated_month
-     )}
+    push_patch_to_month(socket, updated_month)
   end
 
-  defp assign_month_data(socket, now, timezone, current_month) do
+  defp push_patch_to_month(%Socket{} = socket, date) do
+    {:noreply,
+     socket
+     |> assign_month_data(Timex.now(socket.assigns.timezone || "UTC"), date)
+     |> push_patch(to: ~p"/#{Timex.format!(date, "{YYYY}")}/#{Timex.format!(date, "{0M}")}")}
+  end
+
+  defp assign_month_data(socket, now, current_month) do
     next_month = Timex.shift(current_month, months: 1)
 
     assign(socket,
-      timezone: timezone,
       now: Timex.format!(now, "{0M}/{0D}/{YY} {h12}:{m} {AM}"),
       current_month: Timex.format!(current_month, "{Mfull}"),
       next_month: Timex.format!(next_month, "{Mfull}"),
@@ -47,7 +63,14 @@ defmodule EventCalWeb.Live.Index do
     )
   end
 
-  defp parse_month(month, year) do
+  defp parse_date(year, month) do
+    case Timex.parse("#{year}-#{month}-01", "{YYYY}-{0M}-{0D}") do
+      {:ok, date} -> {:ok, date}
+      _error -> {:error, :invalid_date}
+    end
+  end
+
+  defp parse_month!(month, year) do
     Timex.parse!("#{month} 1, #{year}", "{Mfull} {D}, {YYYY}")
   end
 

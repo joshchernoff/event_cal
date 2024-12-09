@@ -17,6 +17,7 @@ defmodule EventCalWeb.Router do
   scope "/", EventCalWeb do
     pipe_through :browser
 
+    live "/:year/:month", Live.Index, :index
     live "/", Live.Index, :index
   end
 
