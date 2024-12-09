@@ -25,7 +25,13 @@ defmodule EventCalWeb.Live.Index do
   def handle_event("set_timezone", %{"timezone" => timezone}, socket) do
     now = Timex.format!(Timex.now(timezone), "{0M}/{0D}/{YY} {h12}:{m} {AM}")
 
-    {:noreply, assign(socket, timezone: timezone, now: now)}
+    {:noreply,
+     socket
+     |> assign_month_data(
+       Timex.now(timezone),
+       parse_month!(socket.assigns.current_month, socket.assigns.current_month_year)
+     )
+     |> assign(timezone: timezone, now: now)}
   end
 
   def handle_event("prev-month", _params, socket) do
@@ -58,8 +64,8 @@ defmodule EventCalWeb.Live.Index do
       next_month: Timex.format!(next_month, "{Mfull}"),
       current_month_year: Timex.format!(current_month, "{YYYY}"),
       next_month_year: Timex.format!(next_month, "{YYYY}"),
-      current_cal: generate_calendar_days(current_month),
-      next_cal: generate_calendar_days(next_month)
+      current_cal: generate_calendar_days(current_month, now),
+      next_cal: generate_calendar_days(next_month, now)
     )
   end
 
@@ -74,7 +80,7 @@ defmodule EventCalWeb.Live.Index do
     Timex.parse!("#{month} 1, #{year}", "{Mfull} {D}, {YYYY}")
   end
 
-  defp generate_calendar_days(date) do
+  defp generate_calendar_days(date, now) do
     first_date = Timex.beginning_of_month(date)
     last_date = Timex.end_of_month(date)
 
@@ -82,7 +88,7 @@ defmodule EventCalWeb.Live.Index do
     end_date = adjust_end_date(last_date)
 
     Date.range(start_date, end_date)
-    |> Enum.map(&classify_day(&1, first_date, last_date))
+    |> Enum.map(&classify_day(&1, first_date, last_date, now))
   end
 
   defp adjust_start_date(first_date) do
@@ -93,11 +99,15 @@ defmodule EventCalWeb.Live.Index do
     last_date |> Date.add(6 - rem(Date.day_of_week(last_date), 7))
   end
 
-  defp classify_day(day, first_date, last_date) do
+  defp classify_day(day, first_date, last_date, now) do
     if Date.compare(day, first_date) == :lt or Date.compare(day, last_date) == :gt do
       {:outside, day.day}
     else
-      {:inside, day.day}
+      if Date.compare(day, now) == :eq do
+        {:today, day.day}
+      else
+        {:inside, day.day}
+      end
     end
   end
 end

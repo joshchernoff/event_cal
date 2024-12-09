@@ -18,14 +18,21 @@ defmodule EventCalWeb.CalComponent do
         <button
           :for={{scope, date} <- @cal}
           type="button"
-          class={[
-            scope == :outside &&
-              "relative bg-zinc-100 py-1.5 text-zinc-300 hover:bg-zinc-100 focus:z-10",
-            scope == :inside &&
+          class={
+            (scope == :outside &&
+               "relative bg-zinc-100 py-1.5 text-zinc-300 hover:bg-zinc-100 focus:z-10") ||
               "relative bg-white py-1.5 text-zinc-900 hover:bg-zinc-100 focus:z-10"
-          ]}
+          }
         >
-          <span class="mx-auto flex size-7 items-center justify-center rounded-full">
+          <span class={[
+            "mx-auto flex size-7 items-center justify-center rounded-full",
+            scope == :today && "bg-indigo-600 font-semibold text-white"
+          ]}>
+            <span
+              :if={scope == :today}
+              class="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-sky-400 opacity-75"
+            >
+            </span>
             {date}
           </span>
         </button>
